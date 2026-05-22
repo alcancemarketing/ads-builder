@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alcance. — Ads Builder</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --carbon: #1a1d20;
+    --gunmetal: #252a2f;
+    --iron: #495057;
+    --slate: #6C757D;
+    --pale: #ADB5BD;
+    --white: #F8F9FA;
+    --border: rgba(255,255,255,0.08);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background:var(--carbon); color:var(--white);
+    font-family:'DM Sans',sans-serif; font-size:15px;
+    line-height:1.6; min-height:100vh; padding:2rem;
+  }
+  body::before {
+    content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+    background-size:200px; opacity:0.04; mix-blend-mode:overlay;
+  }
+  .container { max-width:800px; margin:0 auto; position:relative; z-index:1; }
+
+  header {
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:2.5rem; padding-bottom:1.5rem;
+    border-bottom:1px solid var(--border);
+  }
+  .logo { font-size:1.3rem; font-weight:700; letter-spacing:-0.02em; }
+  .logo span { color:var(--slate); }
+  .header-tag {
+    font-size:0.65rem; letter-spacing:0.14em; text-transform:uppercase;
+    color:var(--slate); border:1px solid var(--border);
+    padding:0.3rem 0.75rem; border-radius:2px;
+  }
+
+  .step-indicator { display:flex; gap:0.5rem; margin-bottom:2.5rem; }
+  .step-dot { height:2px; flex:1; background:var(--border); border-radius:2px; transition:background 0.4s; }
+  .step-dot.active { background:var(--white); }
+  .step-dot.done { background:var(--slate); }
+
+  .form-section { display:none; animation:fadeIn 0.4s ease; }
+  .form-section.active { display:block; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:none} }
+
+  .section-label { font-size:0.68rem; letter-spacing:0.16em; text-transform:uppercase; color:var(--slate); margin-bottom:0.75rem; display:block; }
+  .section-title { font-family:'DM Serif Display',serif; font-size:1.8rem; line-height:1.15; margin-bottom:1.75rem; letter-spacing:-0.01em; }
+  .section-title em { font-style:italic; color:var(--pale); }
+
+  .input-group { margin-bottom:1.25rem; }
+  .input-label { display:block; font-size:0.78rem; color:var(--pale); margin-bottom:0.5rem; font-weight:400; }
+  input[type="text"], input[type="number"], input[type="date"], select, textarea {
+    width:100%; background:var(--gunmetal); border:1px solid var(--border);
+    border-radius:4px; color:var(--white); font-family:'DM Sans',sans-serif;
+    font-size:0.92rem; padding:0.75rem 1rem; outline:none; transition:border-color 0.2s;
+    -webkit-appearance:none;
+  }
+  input:focus, select:focus, textarea:focus { border-color:var(--slate); }
+  select option { background:var(--gunmetal); }
+  textarea { resize:vertical; min-height:80px; }
+
+  .option-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.875rem; margin-bottom:1.5rem; }
+  .option-card {
+    border:1px solid var(--border); border-radius:4px; padding:1.1rem 1.1rem;
+    cursor:pointer; transition:all 0.25s; position:relative; overflow:hidden;
+    background:var(--gunmetal);
+  }
+  .option-card::after {
+    content:''; position:absolute; top:0; left:0; right:0; height:2px;
+    background:var(--white); transform:scaleX(0); transform-origin:left; transition:transform 0.3s;
+  }
+  .option-card:hover { border-color:rgba(255,255,255,0.2); }
+  .option-card.selected { border-color:rgba(255,255,255,0.3); background:rgba(255,255,255,0.05); }
+  .option-card.selected::after { transform:scaleX(1); }
+  .option-card input[type="radio"] { display:none; }
+  .option-icon { font-size:1.3rem; margin-bottom:0.6rem; display:block; }
+  .option-title { font-size:0.85rem; font-weight:600; color:var(--white); margin-bottom:0.25rem; }
+  .option-desc { font-size:0.75rem; color:var(--slate); line-height:1.5; font-weight:300; }
+
+  .sub-select { margin-top:0.75rem; display:none; }
+  .sub-select.visible { display:block; animation:fadeIn 0.3s ease; }
+
+  .budget-preview {
+    background:var(--gunmetal); border:1px solid var(--border);
+    border-radius:4px; padding:1.25rem; margin-top:1rem; display:none;
+  }
+  .budget-preview.visible { display:block; }
+  .budget-row {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:0.45rem 0; border-bottom:1px solid var(--border);
+    font-size:0.82rem;
+  }
+  .budget-row:last-child { border-bottom:none; padding-bottom:0; }
+  .budget-row .label { color:var(--slate); }
+  .budget-row .value { color:var(--white); font-weight:500; }
+  .budget-row .value.highlight { font-family:'DM Serif Display',serif; font-size:1.1rem; }
+
+  .btn-row { display:flex; gap:0.75rem; margin-top:2rem; flex-wrap:wrap; }
+  .btn-primary {
+    background:var(--white); color:var(--carbon); font-family:'DM Sans',sans-serif;
+    font-weight:600; font-size:0.88rem; padding:0.8rem 1.75rem;
+    border-radius:4px; border:none; cursor:pointer; transition:background 0.2s, transform 0.15s;
+  }
+  .btn-primary:hover { background:var(--pale); transform:translateY(-1px); }
+  .btn-ghost {
+    background:transparent; color:var(--pale); font-family:'DM Sans',sans-serif;
+    font-weight:400; font-size:0.88rem; padding:0.8rem 1.75rem;
+    border-radius:4px; border:1px solid var(--border); cursor:pointer; transition:all 0.2s;
+  }
+  .btn-ghost:hover { border-color:var(--slate); color:var(--white); }
+
+  /* RESULT */
+  .result-section { display:none; }
+  .result-section.active { display:block; animation:fadeIn 0.5s ease; }
+
+  .result-header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:2rem; gap:1rem; }
+  .result-badge {
+    font-size:0.65rem; letter-spacing:0.14em; text-transform:uppercase;
+    color:var(--slate); border:1px solid var(--border);
+    padding:0.3rem 0.75rem; border-radius:2px; white-space:nowrap; margin-top:0.5rem;
+  }
+
+  /* NOMENCLATURA */
+  .nomenclatura-block {
+    background:rgba(255,255,255,0.03); border:1px solid var(--border);
+    border-radius:4px; padding:1.25rem; margin-bottom:1rem;
+  }
+  .nomenclatura-title { font-size:0.68rem; letter-spacing:0.14em; text-transform:uppercase; color:var(--slate); margin-bottom:0.75rem; display:block; }
+  .nomenclatura-value {
+    font-family:'DM Sans',sans-serif; font-size:0.88rem;
+    color:var(--white); letter-spacing:0.01em; line-height:1.8;
+    word-break:break-all;
+  }
+  .nom-tag {
+    display:inline-block; background:rgba(255,255,255,0.07);
+    border-radius:2px; padding:0.15rem 0.5rem; margin:0.15rem 0.1rem;
+    font-size:0.8rem; color:var(--pale);
+  }
+  .copy-btn {
+    margin-top:0.75rem; background:transparent; color:var(--slate);
+    font-family:'DM Sans',sans-serif; font-size:0.75rem;
+    border:1px solid var(--border); border-radius:3px;
+    padding:0.35rem 0.85rem; cursor:pointer; transition:all 0.2s;
+  }
+  .copy-btn:hover { border-color:var(--slate); color:var(--white); }
+
+  .structure-block { background:var(--gunmetal); border:1px solid var(--border); border-radius:4px; overflow:hidden; margin-bottom:1rem; }
+  .structure-header { padding:0.85rem 1.25rem; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:0.75rem; }
+  .structure-tag { font-size:0.65rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--slate); background:rgba(255,255,255,0.05); padding:0.2rem 0.6rem; border-radius:2px; }
+  .structure-name { font-size:0.9rem; font-weight:500; color:var(--white); }
+  .structure-body { padding:1.25rem; }
+
+  .adset-row { display:flex; align-items:center; padding:0.65rem 0; border-bottom:1px solid var(--border); gap:1rem; }
+  .adset-row:last-child { border-bottom:none; padding-bottom:0; }
+  .adset-num { font-family:'DM Serif Display',serif; font-size:1.3rem; color:rgba(255,255,255,0.15); min-width:28px; }
+  .adset-info { flex:1; }
+  .adset-title { font-size:0.85rem; font-weight:500; color:var(--white); }
+  .adset-sub { font-size:0.75rem; color:var(--slate); margin-top:0.1rem; }
+  .adset-budget { font-size:0.78rem; color:var(--pale); text-align:right; white-space:nowrap; }
+  .adset-budget strong { display:block; font-size:0.9rem; color:var(--white); }
+
+  .insight-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem; }
+  .insight-card { border:1px solid var(--border); border-radius:4px; padding:1.25rem; position:relative; overflow:hidden; }
+  .insight-card::before { content:''; position:absolute; top:0; left:0; width:3px; height:100%; }
+  .insight-card.strategic::before { background:var(--pale); }
+  .insight-card.suggestion::before { background:var(--slate); }
+  .insight-card-tag { font-size:0.62rem; letter-spacing:0.14em; text-transform:uppercase; margin-bottom:0.6rem; display:block; }
+  .insight-card.strategic .insight-card-tag { color:var(--pale); }
+  .insight-card.suggestion .insight-card-tag { color:var(--slate); }
+  .insight-card p { font-size:0.82rem; color:var(--slate); line-height:1.65; font-weight:300; }
+
+  .divider-line { height:1px; background:var(--border); margin:1.75rem 0; }
+  .reset-btn { background:transparent; color:var(--iron); font-family:'DM Sans',sans-serif; font-size:0.78rem; border:none; cursor:pointer; padding:0; transition:color 0.2s; }
+  .reset-btn:hover { color:var(--pale); }
+
+  @media(max-width:600px) {
+    body { padding:1.25rem; }
+    .option-grid { grid-template-columns:1fr; }
+    .insight-grid { grid-template-columns:1fr; }
+    .section-title { font-size:1.5rem; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="logo">alcance<span>.</span></div>
+    <div class="header-tag">ads builder</div>
+  </header>
+
+  <div class="step-indicator">
+    <div class="step-dot active" id="dot-1"></div>
+    <div class="step-dot" id="dot-2"></div>
+    <div class="step-dot" id="dot-3"></div>
+    <div class="step-dot" id="dot-4"></div>
+  </div>
+
+  <!-- STEP 1 — CLIENTE + UNIDADE + OBJETIVO -->
+  <div class="form-section active" id="step-1">
+    <span class="section-label">passo 01 — cliente & objetivo</span>
+    <h2 class="section-title">Quem é o cliente e<br><em>qual o objetivo?</em></h2>
+
+    <div class="input-group">
+      <label class="input-label">Cliente</label>
+      <select id="cliente" onchange="onClienteChange()">
+        <option value="">Selecione o cliente</option>
+        <option value="Eliana Perna">Eliana Perna</option>
+        <option value="Art Pedras">Art Pedras</option>
+        <option value="Soul Hara">Soul Hara</option>
+        <option value="Remov Laser">Remov Laser</option>
+        <option value="Traine Sports">Traine Sports</option>
+        <option value="Amazon Borracha">Amazon Borracha</option>
+      </select>
+    </div>
+
+    <div class="sub-select" id="sub-unidade">
+      <div class="input-group">
+        <label class="input-label" id="sub-label">Unidade / Canal</label>
+        <select id="unidade" onchange="onUnidadeChange()">
+          <option value="">Selecione</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="input-group" style="margin-top:1.25rem;">
+      <label class="input-label">Objetivo da campanha</label>
+      <div class="option-grid">
+        <label class="option-card" onclick="selectOption('objetivo','escalonar',this)">
+          <input type="radio" name="objetivo" value="escalonar">
+          <span class="option-icon">📦</span>
+          <div class="option-title">Escalonar produtos</div>
+          <p class="option-desc">Testar produtos individualmente e inserir os validados numa cadeia permanente</p>
+        </label>
+        <label class="option-card" onclick="selectOption('objetivo','criativo',this)">
+          <input type="radio" name="objetivo" value="criativo">
+          <span class="option-icon">🎨</span>
+          <div class="option-title">Testar criativos</div>
+          <p class="option-desc">Comparar criativos com o mesmo público para identificar o melhor</p>
+        </label>
+        <label class="option-card" onclick="selectOption('objetivo','publico',this)">
+          <input type="radio" name="objetivo" value="publico">
+          <span class="option-icon">👥</span>
+          <div class="option-title">Testar públicos</div>
+          <p class="option-desc">Comparar públicos diferentes com o mesmo criativo</p>
+        </label>
+        <label class="option-card" onclick="selectOption('objetivo','escala',this)">
+          <input type="radio" name="objetivo" value="escala">
+          <span class="option-icon">🚀</span>
+          <div class="option-title">Escalar campanha</div>
+          <p class="option-desc">Aumentar orçamento em campanha já validada</p>
+        </label>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-primary" onclick="goStep(2)">continuar →</button>
+    </div>
+  </div>
+
+  <!-- STEP 2 — ORÇAMENTO + PERÍODO -->
+  <div class="form-section" id="step-2">
+    <span class="section-label">passo 02 — orçamento & período</span>
+    <h2 class="section-title">Quanto e por<br><em>quanto tempo?</em></h2>
+
+    <div class="input-group">
+      <label class="input-label">Data de início</label>
+      <input type="date" id="data-inicio">
+    </div>
+    <div class="input-group">
+      <label class="input-label">Orçamento total disponível (R$)</label>
+      <input type="number" id="orcamento" placeholder="Ex: 720" min="1" oninput="calcBudget()">
+    </div>
+    <div class="input-group">
+      <label class="input-label">Período da campanha</label>
+      <select id="periodo" onchange="calcBudget()">
+        <option value="">Selecione o período</option>
+        <option value="7">7 dias — validação rápida</option>
+        <option value="10">10 dias — padrão</option>
+        <option value="15">15 dias — análise estendida</option>
+        <option value="30">30 dias — campanha mensal</option>
+      </select>
+    </div>
+    <div class="input-group">
+      <label class="input-label">Número de Ad Sets (conjuntos de anúncios)</label>
+      <select id="adsets" onchange="calcBudget()">
+        <option value="">Selecione</option>
+        <option value="1">1 Ad Set</option>
+        <option value="2">2 Ad Sets</option>
+        <option value="3">3 Ad Sets</option>
+        <option value="4">4 Ad Sets</option>
+        <option value="5">5 Ad Sets</option>
+      </select>
+    </div>
+
+    <div class="budget-preview" id="budget-preview">
+      <div class="budget-row"><span class="label">Orçamento total</span><span class="value" id="prev-total">—</span></div>
+      <div class="budget-row"><span class="label">Período</span><span class="value" id="prev-periodo">—</span></div>
+      <div class="budget-row"><span class="label">Por Ad Set / total</span><span class="value" id="prev-adset">—</span></div>
+      <div class="budget-row"><span class="label">Por Ad Set / dia</span><span class="value highlight" id="prev-diario">—</span></div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-primary" onclick="goStep(3)">continuar →</button>
+      <button class="btn-ghost" onclick="goStep(1)">← voltar</button>
+    </div>
+  </div>
+
+  <!-- STEP 3 — AD SETS + CRIATIVO -->
+  <div class="form-section" id="step-3">
+    <span class="section-label">passo 03 — detalhes dos conjuntos</span>
+    <h2 class="section-title">Nomeie os conjuntos<br><em>e os criativos</em></h2>
+    <div id="adset-inputs"></div>
+    <div class="btn-row">
+      <button class="btn-primary" onclick="goStep(4)">continuar →</button>
+      <button class="btn-ghost" onclick="goStep(2)">← voltar</button>
+    </div>
+  </div>
+
+  <!-- STEP 4 — FASE + NOMENCLATURA -->
+  <div class="form-section" id="step-4">
+    <span class="section-label">passo 04 — fase & nomenclatura</span>
+    <h2 class="section-title">Em que fase está<br><em>essa campanha?</em></h2>
+
+    <div class="input-group">
+      <label class="input-label">Fase da campanha</label>
+      <div class="option-grid">
+        <label class="option-card" onclick="selectOption('fase','Teste',this)">
+          <input type="radio" name="fase" value="Teste">
+          <span class="option-icon">🧪</span>
+          <div class="option-title">Teste</div>
+          <p class="option-desc">Primeira rodada — validando produto, criativo ou público</p>
+        </label>
+        <label class="option-card" onclick="selectOption('fase','Validação',this)">
+          <input type="radio" name="fase" value="Validação">
+          <span class="option-icon">✅</span>
+          <div class="option-title">Validação</div>
+          <p class="option-desc">Confirmando resultados antes de escalar</p>
+        </label>
+        <label class="option-card" onclick="selectOption('fase','Escala',this)">
+          <input type="radio" name="fase" value="Escala">
+          <span class="option-icon">📈</span>
+          <div class="option-title">Escala</div>
+          <p class="option-desc">Campanha validada — aumentando orçamento</p>
+        </label>
+        <label class="option-card" onclick="selectOption('fase','Manutenção',this)">
+          <input type="radio" name="fase" value="Manutenção">
+          <span class="option-icon">🔄</span>
+          <div class="option-title">Manutenção</div>
+          <p class="option-desc">Campanha permanente da cadeia validada</p>
+        </label>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-primary" onclick="generateResult()">gerar estratégia completa →</button>
+      <button class="btn-ghost" onclick="goStep(3)">← voltar</button>
+    </div>
+  </div>
+
+  <!-- RESULTADO -->
+  <div class="result-section" id="result">
+    <div class="result-header">
+      <div>
+        <span class="section-label">estratégia gerada</span>
+        <h2 class="section-title" id="result-title">—</h2>
+      </div>
+      <div class="result-badge" id="result-type-badge">—</div>
+    </div>
+
+    <!-- NOMENCLATURA -->
+    <div class="nomenclatura-block">
+      <span class="nomenclatura-title">🏷️ nomenclatura da campanha</span>
+      <div class="nomenclatura-value" id="nom-display">—</div>
+      <button class="copy-btn" onclick="copyNom()">copiar nomenclatura</button>
+    </div>
+
+    <div id="structure-output"></div>
+
+    <div class="divider-line"></div>
+
+    <div class="insight-grid">
+      <div class="insight-card strategic">
+        <span class="insight-card-tag">📌 visão estratégica</span>
+        <p id="insight-strategic">—</p>
+      </div>
+      <div class="insight-card suggestion">
+        <span class="insight-card-tag">💡 sugestão de melhoria</span>
+        <p id="insight-suggestion">—</p>
+      </div>
+    </div>
+
+    <div class="divider-line"></div>
+    <button class="reset-btn" onclick="resetForm()">← montar nova campanha</button>
+  </div>
+
+</div>
+
+<script>
+  const CLIENTES = {
+    'Eliana Perna': { tipo:'lojas', itens:['Pulse','Lorenzo','1428 Store','Big King','7 Zero'] },
+    'Art Pedras':   { tipo:'unidades', itens:['Loja Dom Pedro','Loja RED Djalma'] },
+    'Soul Hara':    { tipo:'canais', itens:['WhatsApp','Site/Ecommerce','Loja Matriz Manaus','Showroom São Paulo'] },
+    'Remov Laser':  { tipo:null, itens:[] },
+    'Traine Sports':{ tipo:null, itens:[] },
+    'Amazon Borracha':{ tipo:null, itens:[] }
+  };
+
+  const CONVERSAO_SOUL = {
+    'WhatsApp':'Mensagens',
+    'Site/Ecommerce':'Conversões',
+    'Loja Matriz Manaus':'Tráfego Local',
+    'Showroom São Paulo':'Tráfego Local'
+  };
+
+  let state = { cliente:'', unidade:'', objetivo:'', fase:'', orcamento:0, periodo:0, adsets:0, nomes:[], criativos:[], dataInicio:'' };
+
+  function onClienteChange() {
+    const cl = document.getElementById('cliente').value;
+    state.cliente = cl;
+    state.unidade = '';
+    const info = CLIENTES[cl];
+    const subDiv = document.getElementById('sub-unidade');
+    const subSel = document.getElementById('unidade');
+    const subLabel = document.getElementById('sub-label');
+
+    if(info && info.tipo) {
+      const labels = { lojas:'Loja', unidades:'Unidade', canais:'Canal de aquisição' };
+      subLabel.textContent = labels[info.tipo] || 'Unidade';
+      subSel.innerHTML = '<option value="">Selecione</option>';
+      info.itens.forEach(i => { const o=document.createElement('option'); o.value=i; o.textContent=i; subSel.appendChild(o); });
+      subDiv.classList.add('visible');
+    } else {
+      subDiv.classList.remove('visible');
+      state.unidade = cl;
+    }
+  }
+
+  function onUnidadeChange() {
+    state.unidade = document.getElementById('unidade').value;
+  }
+
+  function selectOption(group, value, el) {
+    const cards = document.querySelectorAll(`input[name="${group}"]`);
+    cards.forEach(c => c.closest('.option-card').classList.remove('selected'));
+    el.classList.add('selected');
+    state[group] = value;
+  }
+
+  function calcBudget() {
+    const orc = parseFloat(document.getElementById('orcamento').value)||0;
+    const per = parseInt(document.getElementById('periodo').value)||0;
+    const ads = parseInt(document.getElementById('adsets').value)||0;
+    state.orcamento=orc; state.periodo=per; state.adsets=ads;
+    const preview = document.getElementById('budget-preview');
+    if(orc>0&&per>0&&ads>0) {
+      preview.classList.add('visible');
+      const porAdset=orc/ads, porDia=porAdset/per;
+      document.getElementById('prev-total').textContent=`R$ ${orc.toFixed(2)}`;
+      document.getElementById('prev-periodo').textContent=`${per} dias`;
+      document.getElementById('prev-adset').textContent=`R$ ${porAdset.toFixed(2)}`;
+      document.getElementById('prev-diario').textContent=`R$ ${porDia.toFixed(2)}/dia`;
+    } else { preview.classList.remove('visible'); }
+  }
+
+  function goStep(n) {
+    if(n===2) {
+      state.cliente = document.getElementById('cliente').value;
+      if(CLIENTES[state.cliente]?.tipo) state.unidade = document.getElementById('unidade').value;
+      else state.unidade = state.cliente;
+      if(!state.cliente || !state.objetivo) { alert('Selecione o cliente e o objetivo.'); return; }
+      if(CLIENTES[state.cliente]?.tipo && !state.unidade) { alert('Selecione a unidade/canal.'); return; }
+      // set default date
+      if(!document.getElementById('data-inicio').value) {
+        const today = new Date();
+        document.getElementById('data-inicio').value = today.toISOString().split('T')[0];
+      }
+    }
+    if(n===3) {
+      state.orcamento=parseFloat(document.getElementById('orcamento').value)||0;
+      state.periodo=parseInt(document.getElementById('periodo').value)||0;
+      state.adsets=parseInt(document.getElementById('adsets').value)||0;
+      state.dataInicio=document.getElementById('data-inicio').value;
+      if(!state.orcamento||!state.periodo||!state.adsets||!state.dataInicio) { alert('Preencha todos os campos.'); return; }
+      buildAdSetInputs();
+    }
+    if(n===4) {
+      state.nomes=[];
+      state.criativos=[];
+      for(let i=0;i<state.adsets;i++) {
+        state.nomes.push(document.getElementById(`adset-name-${i}`)?.value.trim()||`Ad Set ${i+1}`);
+        state.criativos.push(document.getElementById(`adset-criativo-${i}`)?.value.trim()||'');
+      }
+    }
+
+    document.querySelectorAll('.form-section').forEach(s=>s.classList.remove('active'));
+    document.getElementById('result').classList.remove('active');
+    const target = document.getElementById(`step-${n}`);
+    if(target) target.classList.add('active');
+
+    for(let i=1;i<=4;i++) {
+      const dot=document.getElementById(`dot-${i}`);
+      dot.classList.remove('active','done');
+      if(i<n) dot.classList.add('done');
+      else if(i===n) dot.classList.add('active');
+    }
+  }
+
+  function buildAdSetInputs() {
+    const container = document.getElementById('adset-inputs');
+    container.innerHTML='';
+    const labels = { escalonar:['produto','produto'], criativo:['criativo','criativo'], publico:['público','público'], escala:['conjunto','conjunto'] };
+    const lbl = labels[state.objetivo]||['conjunto','conjunto'];
+    for(let i=0;i<state.adsets;i++) {
+      container.innerHTML+=`
+        <div style="background:var(--gunmetal);border:1px solid var(--border);border-radius:4px;padding:1.1rem;margin-bottom:0.875rem;">
+          <div style="font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--slate);margin-bottom:0.75rem;">Ad Set 0${i+1}</div>
+          <div class="input-group" style="margin-bottom:0.75rem;">
+            <label class="input-label">Nome do ${lbl[0]}</label>
+            <input type="text" id="adset-name-${i}" placeholder="Ex: ${getAdSetPlaceholder(i)}">
+          </div>
+          <div class="input-group" style="margin-bottom:0;">
+            <label class="input-label">Descrição do criativo (opcional)</label>
+            <input type="text" id="adset-criativo-${i}" placeholder="Ex: Vídeo 15s modelo usando produto">
+          </div>
+        </div>`;
+    }
+  }
+
+  function getAdSetPlaceholder(i) {
+    if(state.objetivo==='escalonar') return i===0?'Camisa do Brasil':'Vestido Floral';
+    if(state.objetivo==='criativo') return i===0?'Vídeo com modelo':'Foto produto fundo branco';
+    if(state.objetivo==='publico') return i===0?'Mulheres 25-34 Manaus':'Interesses moda feminina';
+    return `Conjunto ${i+1}`;
+  }
+
+  function formatDate(d) {
+    if(!d) return '';
+    const parts=d.split('-');
+    return `${parts[2]}.${parts[1]}.${parts[0].slice(2)}`;
+  }
+
+  function getCampType() {
+    if(state.objetivo==='publico'||state.objetivo==='escala') return 'CBO';
+    return 'ABO';
+  }
+
+  function getConversao() {
+    if(state.cliente==='Soul Hara') return CONVERSAO_SOUL[state.unidade]||'Conversões';
+    if(state.objetivo==='escalonar'||state.objetivo==='criativo') return 'Vendas';
+    if(state.objetivo==='publico') return 'Conversões';
+    return 'Conversões';
+  }
+
+  function buildNomenclatura() {
+    const data = formatDate(state.dataInicio);
+    const unidade = state.unidade || state.cliente;
+    const tipo = getCampType();
+    const conversao = getConversao();
+    const criativo = state.nomes[0] ? state.nomes[0].replace(/\s+/g,'') : 'Criativo';
+    const fase = state.fase;
+    return `${data} | ${unidade} | ${tipo} | ${conversao} | ${criativo} | ${fase}`;
+  }
+
+  function generateResult() {
+    if(!state.fase) { alert('Selecione a fase da campanha.'); return; }
+
+    document.querySelectorAll('.form-section').forEach(s=>s.classList.remove('active'));
+    document.querySelectorAll('.step-dot').forEach(d=>{ d.classList.remove('active'); d.classList.add('done'); });
+
+    const objLabels={ escalonar:'ABO — Escalonamento de Produtos', criativo:'ABO — Teste de Criativos', publico:'CBO — Teste de Públicos', escala:'CBO — Escala' };
+    const unidadeDisplay = state.unidade||state.cliente;
+
+    document.getElementById('result-title').innerHTML=`${unidadeDisplay}<br><em>${objLabels[state.objetivo]}</em>`;
+    document.getElementById('result-type-badge').textContent=getCampType();
+
+    // Nomenclatura
+    const nom = buildNomenclatura();
+    document.getElementById('nom-display').innerHTML = nom.split(' | ').map(t=>`<span class="nom-tag">${t}</span>`).join('<span style="color:var(--iron);padding:0 0.1rem">|</span>');
+
+    // Estrutura
+    const porAdset=state.orcamento/state.adsets;
+    const porDia=porAdset/state.periodo;
+    let html=`<div class="structure-block">
+      <div class="structure-header">
+        <span class="structure-tag">campanha</span>
+        <span class="structure-name">${unidadeDisplay} — ${getCampType()} · ${state.periodo} dias</span>
+      </div>
+      <div class="structure-body">`;
+    state.nomes.forEach((nome,i)=>{
+      html+=`<div class="adset-row">
+        <span class="adset-num">0${i+1}</span>
+        <div class="adset-info">
+          <div class="adset-title">${nome}</div>
+          <div class="adset-sub">${state.criativos[i]||getAdSetSub(i)}</div>
+        </div>
+        <div class="adset-budget"><strong>R$ ${porAdset.toFixed(2)}</strong>R$ ${porDia.toFixed(2)}/dia</div>
+      </div>`;
+    });
+    html+=`</div></div>`;
+    document.getElementById('structure-output').innerHTML=html;
+
+    const ins=getInsights(porDia.toFixed(2));
+    document.getElementById('insight-strategic').textContent=ins.strategic;
+    document.getElementById('insight-suggestion').textContent=ins.suggestion;
+
+    document.getElementById('result').classList.add('active');
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+
+  function getAdSetSub(i) {
+    if(state.objetivo==='escalonar') return `1 criativo · ${state.periodo} dias de validação`;
+    if(state.objetivo==='criativo') return `mesmo público · criativo isolado`;
+    if(state.objetivo==='publico') return `mesmo criativo · público isolado`;
+    return `conjunto ${i+1}`;
+  }
+
+  function getInsights(porDia) {
+    const ins = {
+      escalonar:{ strategic:`Com ABO e 1 produto por Ad Set, o orçamento de R$${porDia}/dia por conjunto garante dados reais sem supressão. Produto que cobrir o custo de anúncio em ${state.periodo} dias entra na cadeia permanente.`, suggestion:`Defina antes do lançamento o custo máximo aceitável por venda para cada produto. Sem esse número, fica difícil decidir se o produto passou no teste.` },
+      criativo:{ strategic:`ABO garante que cada criativo recebe R$${porDia}/dia independente de performance inicial. Mantenha o mesmo público em todos os Ad Sets para isolar a variável.`, suggestion:`Se mudar público e criativo ao mesmo tempo, fica impossível saber o que causou a diferença. Uma variável de cada vez.` },
+      publico:{ strategic:`CBO distribui o orçamento naturalmente para o público que melhor responde ao criativo — revelando o perfil com maior potencial. Use o mesmo criativo em todos os Ad Sets sem exceção.`, suggestion:`Após identificar o público vencedor, replique com ABO para testar criativos dentro dele. Essa é a sequência ideal de aprendizado.` },
+      escala:{ strategic:`Evite aumentos acima de 20-30% de orçamento de uma vez para não resetar o aprendizado do algoritmo. O CBO redistribui o orçamento adicional onde já identificou maior potencial.`, suggestion:`Confirme que a campanha tem pelo menos 50 eventos de conversão por semana antes de escalar. Abaixo disso o algoritmo ainda não tem dados suficientes.` }
+    };
+    return ins[state.objetivo]||{strategic:'—',suggestion:'—'};
+  }
+
+  function copyNom() {
+    const nom = buildNomenclatura();
+    navigator.clipboard.writeText(nom).then(()=>{
+      const btn=document.querySelector('.copy-btn');
+      btn.textContent='copiado ✓';
+      setTimeout(()=>btn.textContent='copiar nomenclatura',2000);
+    });
+  }
+
+  function resetForm() {
+    state={cliente:'',unidade:'',objetivo:'',fase:'',orcamento:0,periodo:0,adsets:0,nomes:[],criativos:[],dataInicio:''};
+    document.getElementById('cliente').value='';
+    document.getElementById('unidade').value='';
+    document.getElementById('orcamento').value='';
+    document.getElementById('periodo').value='';
+    document.getElementById('adsets').value='';
+    document.getElementById('data-inicio').value='';
+    document.querySelectorAll('.option-card').forEach(c=>c.classList.remove('selected'));
+    document.getElementById('budget-preview').classList.remove('visible');
+    document.getElementById('sub-unidade').classList.remove('visible');
+    document.getElementById('result').classList.remove('active');
+    goStep(1);
+  }
+
+  // Set today as default date on load
+  window.onload = () => {
+    const today=new Date();
+    document.getElementById('data-inicio').value=today.toISOString().split('T')[0];
+  };
+</script>
+</body>
+</html>
